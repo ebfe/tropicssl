@@ -111,6 +111,8 @@
 #define SSL_RSA_CAMELLIA_256_SHA	0x84
 #define SSL_EDH_RSA_CAMELLIA_256_SHA	0x88
 
+#define SSL_RSA_PSK_AES_256_SHA         0x95
+
 /*
  * Message, alert and handshake types
  */
@@ -251,6 +253,14 @@ struct _ssl_context {
 	int authmode;		/*!<  verification mode       */
 	int client_auth;	/*!<  flag for client auth.   */
 	int verify_result;	/*!<  verification result     */
+
+	/*
+	 *  PSK
+	 */
+	unsigned char psk[256-48];
+	unsigned char pskid[256];
+	int psk_len;
+	int pskid_len;
 
 	/*
 	 * Crypto layer
@@ -424,6 +434,20 @@ extern "C" {
 	 * \return         0 if successful
 	 */
 	int ssl_set_dh_param(ssl_context * ssl, char *dhm_P, char *dhm_G);
+
+	/**
+	 * \brief           Set pre-shared key for RSA_PSK_* ciphers (client side only)
+	 *
+	 *
+	 * \param ssl       SSL context
+	 * \param pskid	    psk identity
+	 * \param pskid_len length of the psk identity
+	 * \param psk       pre-shared key
+	 * \param psk_len   length of the pre-shared key
+	 *
+	 * \return         0 if successful
+	 */
+	int ssl_set_psk(ssl_context * ssl, unsigned char *pskid, int pskid_len, unsigned char *psk, int psk_len);
 
 	/**
 	 * \brief          Set hostname for ServerName TLS Extension
