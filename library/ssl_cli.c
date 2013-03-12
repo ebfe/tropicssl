@@ -540,7 +540,8 @@ static int ssl_write_client_key_exchange(ssl_context * ssl)
 		i = 4;
 		n = ssl->peer_cert->rsa.len;
 
-		if (ssl->session->cipher == SSL_RSA_PSK_AES_256_SHA) {
+		if (ssl->session->cipher == SSL_RSA_PSK_AES_128_SHA ||
+		    ssl->session->cipher == SSL_RSA_PSK_AES_256_SHA) {
 			ssl->out_msg[i++] = (unsigned char)(ssl->pskid_len >> 8);
 			ssl->out_msg[i++] = (unsigned char)(ssl->pskid_len);
 			memcpy(ssl->out_msg+i, ssl->pskid, ssl->pskid_len);
@@ -561,7 +562,8 @@ static int ssl_write_client_key_exchange(ssl_context * ssl)
 			return (ret);
 		}
 
-		if (ssl->session->cipher == SSL_RSA_PSK_AES_256_SHA) {
+		if (ssl->session->cipher == SSL_RSA_PSK_AES_128_SHA ||
+		    ssl->session->cipher == SSL_RSA_PSK_AES_256_SHA) {
 			memmove(ssl->premaster + 2, ssl->premaster, ssl->pmslen);
 			ssl->premaster[0] = 0;
 			ssl->premaster[1] = 48;
