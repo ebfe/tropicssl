@@ -100,6 +100,7 @@
  * This module enables the following ciphersuites:
  *      SSL_RSA_AES_128_SHA
  *      SSL_RSA_AES_256_SHA
+ *      SSL_RSA_PSK_AES_256_SHA
  *      SSL_EDH_RSA_AES_256_SHA
  */
 #define TROPICSSL_AES_C

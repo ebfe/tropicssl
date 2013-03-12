@@ -540,11 +540,18 @@ static int ssl_write_client_key_exchange(ssl_context * ssl)
 		i = 4;
 		n = ssl->peer_cert->rsa.len;
 
-		if (ssl->minor_ver != SSL_MINOR_VERSION_0) {
-			i += 2;
-			ssl->out_msg[4] = (unsigned char)(n >> 8);
-			ssl->out_msg[5] = (unsigned char)(n);
+		if (ssl->session->cipher == SSL_RSA_PSK_AES_256_SHA) {
+			ssl->out_msg[i++] = (unsigned char)(ssl->pskid_len >> 8);
+			ssl->out_msg[i++] = (unsigned char)(ssl->pskid_len);
+			memcpy(ssl->out_msg+i, ssl->pskid, ssl->pskid_len);
+			i += ssl->pskid_len;
 		}
+
+		if (ssl->minor_ver != SSL_MINOR_VERSION_0) {
+			ssl->out_msg[i++] = (unsigned char)(n >> 8);
+			ssl->out_msg[i++] = (unsigned char)(n);
+		}
+
 
 		ret = rsa_pkcs1_encrypt(&ssl->peer_cert->rsa, RSA_PUBLIC,
 					ssl->pmslen, ssl->premaster,
@@ -552,6 +559,18 @@ static int ssl_write_client_key_exchange(ssl_context * ssl)
 		if (ret != 0) {
 			SSL_DEBUG_RET(1, "rsa_pkcs1_encrypt", ret);
 			return (ret);
+		}
+
+		if (ssl->session->cipher == SSL_RSA_PSK_AES_256_SHA) {
+			memmove(ssl->premaster + 2, ssl->premaster, ssl->pmslen);
+			ssl->premaster[0] = 0;
+			ssl->premaster[1] = 48;
+			ssl->pmslen += 2;
+
+			ssl->premaster[ssl->pmslen++] = (unsigned char)(ssl->psk_len >> 8);
+			ssl->premaster[ssl->pmslen++] = (unsigned char)(ssl->psk_len);
+			memcpy(ssl->premaster+ssl->pmslen, ssl->psk, ssl->psk_len);
+			ssl->pmslen += ssl->psk_len;
 		}
 	}
 

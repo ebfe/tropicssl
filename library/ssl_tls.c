@@ -260,6 +260,7 @@ int ssl_derive_keys(ssl_context * ssl)
 		break;
 
 	case SSL_RSA_AES_256_SHA:
+	case SSL_RSA_PSK_AES_256_SHA:
 	case SSL_EDH_RSA_AES_256_SHA:
 		ssl->keylen = 32;
 		ssl->minlen = 32;
@@ -343,6 +344,7 @@ int ssl_derive_keys(ssl_context * ssl)
 		break;
 
 	case SSL_RSA_AES_256_SHA:
+	case SSL_RSA_PSK_AES_256_SHA:
 	case SSL_EDH_RSA_AES_256_SHA:
 		aes_setkey_enc((aes_context *) ssl->ctx_enc, key1, 256);
 		aes_setkey_dec((aes_context *) ssl->ctx_dec, key2, 256);
@@ -574,6 +576,7 @@ static int ssl_encrypt_buf(ssl_context * ssl)
 #if defined(TROPICSSL_AES_C)
 			if (ssl->session->cipher == SSL_RSA_AES_128_SHA ||
 			    ssl->session->cipher == SSL_RSA_AES_256_SHA ||
+			    ssl->session->cipher == SSL_RSA_PSK_AES_256_SHA ||
 			    ssl->session->cipher == SSL_EDH_RSA_AES_256_SHA) {
 				aes_crypt_cbc((aes_context *) ssl->ctx_enc,
 					      AES_ENCRYPT, ssl->out_msglen,
@@ -651,6 +654,7 @@ static int ssl_decrypt_buf(ssl_context * ssl)
 #if defined(TROPICSSL_AES_C)
 			if (ssl->session->cipher == SSL_RSA_AES_128_SHA ||
 			    ssl->session->cipher == SSL_RSA_AES_256_SHA ||
+			    ssl->session->cipher == SSL_RSA_PSK_AES_256_SHA ||
 			    ssl->session->cipher == SSL_EDH_RSA_AES_256_SHA) {
 				aes_crypt_cbc((aes_context *) ssl->ctx_dec,
 					      AES_DECRYPT, ssl->in_msglen,
@@ -1650,6 +1654,25 @@ int ssl_set_dh_param(ssl_context * ssl, char *dhm_P, char *dhm_G)
 	return (0);
 }
 
+int ssl_set_psk(ssl_context * ssl, unsigned char *pskid, int pskid_len, unsigned char *psk, int psk_len)
+{
+	if (pskid_len < 0 || pskid_len > sizeof(ssl->pskid)) {
+		return TROPICSSL_ERR_SSL_BAD_INPUT_DATA;
+	}
+
+	if (psk_len < 0 || psk_len > sizeof(ssl->psk)) {
+		return TROPICSSL_ERR_SSL_BAD_INPUT_DATA;
+	}
+
+	memcpy(ssl->pskid, pskid, pskid_len);
+	ssl->pskid_len = pskid_len;
+
+	memcpy(ssl->psk, psk, psk_len);
+	ssl->psk_len = psk_len;
+
+	return (0);
+}
+
 int ssl_set_hostname(ssl_context * ssl, char *hostname)
 {
 	if (hostname == NULL)
@@ -1702,6 +1725,9 @@ char *ssl_get_cipher(ssl_context * ssl)
 	case SSL_RSA_AES_256_SHA:
 		return ("SSL_RSA_AES_256_SHA");
 
+	case SSL_RSA_PSK_AES_256_SHA:
+		return ("SSL_RSA_PSK_AES_256_SHA");
+
 	case SSL_EDH_RSA_AES_256_SHA:
 		return ("SSL_EDH_RSA_AES_256_SHA");
 #endif
@@ -1740,6 +1766,7 @@ int ssl_default_ciphers[] = {
 #if defined(TROPICSSL_AES_C)
 	SSL_RSA_AES_128_SHA,
 	SSL_RSA_AES_256_SHA,
+	SSL_RSA_PSK_AES_256_SHA,
 #endif
 #if defined(TROPICSSL_CAMELLIA_C)
 	SSL_RSA_CAMELLIA_128_SHA,
