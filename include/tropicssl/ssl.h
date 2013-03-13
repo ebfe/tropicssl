@@ -111,6 +111,7 @@
 #define SSL_RSA_CAMELLIA_256_SHA	0x84
 #define SSL_EDH_RSA_CAMELLIA_256_SHA	0x88
 
+#define SSL_RSA_PSK_DES_168_SHA         0x93
 #define SSL_RSA_PSK_AES_128_SHA         0x94
 #define SSL_RSA_PSK_AES_256_SHA         0x95
 

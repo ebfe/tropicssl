@@ -243,6 +243,7 @@ int ssl_derive_keys(ssl_context * ssl)
 
 #if defined(TROPICSSL_DES_C)
 	case SSL_RSA_DES_168_SHA:
+	case SSL_RSA_PSK_DES_168_SHA:
 	case SSL_EDH_RSA_DES_168_SHA:
 		ssl->keylen = 24;
 		ssl->minlen = 24;
@@ -332,6 +333,7 @@ int ssl_derive_keys(ssl_context * ssl)
 
 #if defined(TROPICSSL_DES_C)
 	case SSL_RSA_DES_168_SHA:
+	case SSL_RSA_PSK_DES_168_SHA:
 	case SSL_EDH_RSA_DES_168_SHA:
 		des3_set3key_enc((des3_context *) ssl->ctx_enc, key1);
 		des3_set3key_dec((des3_context *) ssl->ctx_dec, key2);
@@ -1717,6 +1719,9 @@ char *ssl_get_cipher(ssl_context * ssl)
 #if defined(TROPICSSL_DES_C)
 	case SSL_RSA_DES_168_SHA:
 		return ("SSL_RSA_DES_168_SHA");
+
+	case SSL_RSA_PSK_DES_168_SHA:
+		return ("SSL_RSA_PSK_DES_168_SHA");
 
 	case SSL_EDH_RSA_DES_168_SHA:
 		return ("SSL_EDH_RSA_DES_168_SHA");
