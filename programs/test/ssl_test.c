@@ -71,6 +71,8 @@
 #define DFL_SESSION_REUSE       1
 #define DFL_SESSION_LIFETIME    86400
 #define DFL_FORCE_CIPHER        0
+#define DFL_PSK_IDENTITY	"Client_identity"
+#define DFL_PSK			"\x01\x02\x03\x04"
 
 /*
  * server-specific data
@@ -101,6 +103,8 @@ struct options {
 	int session_reuse;	/* flag to reuse the keying material    */
 	int session_lifetime;	/* if reached, session data is expired  */
 	int force_cipher[2];	/* protocol/cipher to use, or all       */
+	char *psk_identity;	/* identity for pre-shared key ciphers	*/
+	char *psk;		/* pre-shared key                       */
 };
 
 /*
@@ -185,6 +189,13 @@ static int ssl_test(struct options *opt)
 		}
 
 		ssl_set_endpoint(&ssl, SSL_IS_CLIENT);
+
+		if (opt->force_cipher[0] == SSL_RSA_PSK_AES_128_SHA ||
+		    opt->force_cipher[0] == SSL_RSA_PSK_AES_256_SHA ||
+		    opt->force_cipher[0] == SSL_RSA_PSK_DES_168_SHA) {
+			ssl_set_psk(&ssl, opt->psk_identity, strlen(opt->psk_identity),
+					opt->psk, strlen(opt->psk));
+		}
 	}
 
 	if (opt->opmode == OPMODE_SERVER) {
@@ -378,12 +389,16 @@ exit:
     "    session_reuse=on/off        default: on (enabled)\n"    \
     "    session_lifetime=%%d (s)     default: 86400\n"          \
     "    force_cipher=<name>         default: all enabled\n"     \
+    "    psk_identity=<id>           default: Client_identity\n" \
+    "    psk=<key>                   default: '\x01\x02\x03\x04'\n"\
     " acceptable cipher names:\n"                                \
     "    SSL_RSA_RC4_128_MD5         SSL_RSA_RC4_128_SHA\n"      \
     "    SSL_RSA_DES_168_SHA         SSL_EDH_RSA_DES_168_SHA\n"  \
     "    SSL_RSA_AES_128_SHA         SSL_EDH_RSA_AES_256_SHA\n"  \
     "    SSL_RSA_AES_256_SHA         SSL_EDH_RSA_CAMELLIA_256_SHA\n" \
-    "    SSL_RSA_CAMELLIA_128_SHA    SSL_RSA_CAMELLIA_256_SHA\n\n"
+    "    SSL_RSA_CAMELLIA_128_SHA    SSL_RSA_CAMELLIA_256_SHA\n" \
+    "    SSL_RSA_PSK_DES_168_SHA     SSL_RSA_PSK_AES_128_SHA\n" \
+    "    SSL_RSA_PSK_AES_256_SHA\n\n"
 
 int main(int argc, char *argv[])
 {
@@ -412,6 +427,8 @@ usage:
 	opt.session_reuse = DFL_SESSION_REUSE;
 	opt.session_lifetime = DFL_SESSION_LIFETIME;
 	opt.force_cipher[0] = DFL_FORCE_CIPHER;
+	opt.psk_identity = DFL_PSK_IDENTITY;
+	opt.psk = DFL_PSK;
 
 	for (i = 1; i < argc; i++) {
 		n = strlen(argv[i]);
@@ -526,8 +543,16 @@ usage:
 				opt.force_cipher[0] = SSL_RSA_CAMELLIA_256_SHA;
 
 			if (strcmp(q, "ssl_edh_rsa_camellia_256_sha") == 0)
-				opt.force_cipher[0] =
-				    SSL_EDH_RSA_CAMELLIA_256_SHA;
+				opt.force_cipher[0] = SSL_EDH_RSA_CAMELLIA_256_SHA;
+
+			if (strcmp(q, "ssl_rsa_psk_des_168_sha") == 0)
+				opt.force_cipher[0] = SSL_RSA_PSK_DES_168_SHA;
+
+			if (strcmp(q, "ssl_rsa_psk_aes_128_sha") == 0)
+				opt.force_cipher[0] = SSL_RSA_PSK_AES_128_SHA;
+
+			if (strcmp(q, "ssl_rsa_psk_aes_256_sha") == 0)
+				opt.force_cipher[0] = SSL_RSA_PSK_AES_256_SHA;
 
 			if (opt.force_cipher[0] < 0)
 				goto usage;
